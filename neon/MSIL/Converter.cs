@@ -98,6 +98,15 @@ namespace Neo.Compiler.MSIL
 
                     //try
                     {
+                        byte[] outcall;string name;
+                        if (IsAppCall(m.Value.method, out outcall))
+                            continue;
+                        if (IsNonCall(m.Value.method))
+                            continue;
+                        if (IsOpCall(m.Value.method, out name))
+                            continue;
+                        if (IsSysCall(m.Value.method, out name))
+                            continue;
                         this.ConvertMethod(m.Value, nm);
                     }
                     //catch (Exception err)
