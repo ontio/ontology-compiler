@@ -100,6 +100,12 @@ namespace Neo.Compiler.MSIL
 
                     //try
                     {
+                        nm.returntype = m.Value.returntype;
+                        foreach (var src in m.Value.paramtypes)
+                        {
+                            nm.paramtypes.Add(new AntsParam(src.name, src.type));
+                        }
+
                         byte[] outcall;string name;
                         if (IsAppCall(m.Value.method, out outcall))
                             continue;
@@ -109,6 +115,8 @@ namespace Neo.Compiler.MSIL
                             continue;
                         if (IsSysCall(m.Value.method, out name))
                             continue;
+
+
                         this.ConvertMethod(m.Value, nm);
                     }
                     //catch (Exception err)
@@ -209,11 +217,6 @@ namespace Neo.Compiler.MSIL
 
         private void ConvertMethod(ILMethod from, AntsMethod to)
         {
-            to.returntype = from.returntype;
-            foreach (var src in from.paramtypes)
-            {
-                to.paramtypes.Add(new AntsParam(src.name, src.type));
-            }
 
 
             this.addr = 0;
