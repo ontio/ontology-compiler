@@ -159,6 +159,32 @@ namespace Neo.Compiler.JVM
             callhash = null;
             return false;
         }
+#if SWITCHOPEN
+        private int _ConvertSwitch(JavaMethod method, OpCode src, AntsMethod to)
+        {
+            var ins = (javaloader.ClassFile.Method.Instruction)src.tokenUnknown  ;
+
+
+            var addrdata = new byte[ins.SwitchEntryCount * 6 + 2];
+            var shortaddrcount = (UInt16)ins.SwitchEntryCount;
+            var data = BitConverter.GetBytes(shortaddrcount);
+            addrdata[0] = data[0];
+            addrdata[1] = data[1];
+            var code = _Convert1by1(VM.OpCode.SWITCH, src, to, addrdata);
+            code.needfix = true;
+            code.srcaddrstarget = new int[shortaddrcount];
+            code.srcaddrsvalue = new int[shortaddrcount];
+            for (var i = 0; i < shortaddrcount; i++)
+            {
+                code.srcaddrstarget[i] = ins.switch_entries[i].target;
+                code.srcaddrsvalue[i] = ins.switch_entries[i].value;
+            }
+            var code2=_Insert1(VM.OpCode.JMP, "", to, new byte[2]);
+            code2.needfix = true;
+            code2.srcaddr = ins.DefaultTarget;
+            return 0;
+        }
+#endif
         private int _ConvertCall(JavaMethod method, OpCode src, AntsMethod to)
         {
             _Convert1by1(VM.OpCode.NOP, src, to);
@@ -295,21 +321,27 @@ namespace Neo.Compiler.JVM
                     name == "java.lang.Character::valueOf" ||
                     name == "java.lang.String::valueOf" ||
                     name == "java.lang.Long::valueOf" ||
+                    name == "java.lang.Integer::valueOf" ||
                     name == "java.math.BigInteger::toByteArray")
                 {
                     //donothing
                     return 0;
                 }
-                else if (name == "java.lang.Boolean::booleanValue")
+                else if (name == "java.lang.Boolean::booleanValue"||
+                    name == "java.lang.Integer::integerValue" ||
+                    name == "java.lang.Long::longValue"||
+                    name == "java.math.BigInteger::longValue")
                 {
                     _Convert1by1(VM.OpCode.NOP, src, to);
                     return 0;
                 }
+#if SWITCHOPEN
                 else if (name == "java.lang.String::hashCode")
                 {
-                    //java switch 的编译方式很奇怪
+                    _Convert1by1(VM.OpCode.JAVAHASH32, src, to);
                     return 0;
                 }
+#endif
                 else if (name == "java.lang.String::charAt")
                 {
                     _ConvertPush(1, src, to);
@@ -325,7 +357,8 @@ namespace Neo.Compiler.JVM
                 {
                     return _ConvertStringBuilder(c.Name, null, to);
                 }
-                else if (name == "java.util.Arrays::equals")
+                else if (name == "java.util.Arrays::equals"||
+                    name== "kotlin.jvm.internal.Intrinsics::areEqual")
                 {
                     _Convert1by1(VM.OpCode.EQUAL, null, to);
                     return 0;
