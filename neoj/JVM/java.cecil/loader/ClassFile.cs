@@ -3111,7 +3111,7 @@ namespace javaloader
                 private NormalizedByteCode normopcode;
                 private int arg1;
                 private short arg2;
-                private SwitchEntry[] switch_entries;
+                public SwitchEntry[] switch_entries;
 
                 public struct SwitchEntry
                 {
@@ -3184,10 +3184,10 @@ namespace javaloader
 
                 public void MapSwitchTargets(int[] pcIndexMap)
                 {
-                    arg1 = pcIndexMap[arg1 + pc];
+                    arg1 = arg1 + pc;// pcIndexMap[arg1 + pc];
                     for (int i = 0; i < switch_entries.Length; i++)
                     {
-                        switch_entries[i].target = pcIndexMap[switch_entries[i].target + pc];
+                        switch_entries[i].target = switch_entries[i].target + pc;// pcIndexMap[switch_entries[i].target + pc];
                     }
                 }
 

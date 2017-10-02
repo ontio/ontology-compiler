@@ -263,12 +263,32 @@ namespace Neo.Compiler.JVM
 
                     )
                 {
-
-                    var addr = addrconv[c.srcaddr];
-                    Int16 addroff = (Int16)(addr - c.addr);
-                    c.bytes = BitConverter.GetBytes(addroff);
-                    c.needfix = false;
-
+#if SWITCHOPEN
+                    if (c.code == VM.OpCode.SWITCH)
+                    {
+                        for (var i = 0; i < c.srcaddrstarget.Length; i++)
+                        {
+                            var addr = addrconv[c.srcaddrstarget[i]];
+                            Int16 addroff = (Int16)(addr - c.addr);
+                            var bs = BitConverter.GetBytes(addroff);
+                            var bsv = BitConverter.GetBytes(c.srcaddrsvalue[i]);
+                            c.bytes[i * 6 + 2 + 0] = bsv[0];
+                            c.bytes[i * 6 + 2 + 1] = bsv[1];
+                            c.bytes[i * 6 + 2 + 2] = bsv[2];
+                            c.bytes[i * 6 + 2 + 3] = bsv[3];
+                            c.bytes[i * 6 + 2 + 4] = bs[0];
+                            c.bytes[i * 6 + 2 + 5] = bs[1];
+                            c.needfix = false;
+                        }
+                    }
+                    else
+#endif
+                    {
+                        var addr = addrconv[c.srcaddr];
+                        Int16 addroff = (Int16)(addr - c.addr);
+                        c.bytes = BitConverter.GetBytes(addroff);
+                        c.needfix = false;
+                    }
                 }
             }
         }
@@ -602,6 +622,16 @@ namespace Neo.Compiler.JVM
                         var code = _Convert1by1(VM.OpCode.JMPIF, null, to, new byte[] { 0, 0 });
                         code.needfix = true;
                         code.srcaddr = src.addr + src.arg1;
+                    }
+                    break;
+
+                case javaloader.NormalizedByteCode.__lookupswitch:
+                    {
+#if SWITCHOPEN
+                        skipcount = _ConvertSwitch(method, src, to);
+#else
+                        throw new Exception("需要neo.vm nuget更新以后，这个才可以放开，就可以处理 string switch了。");
+#endif
                     }
                     break;
                 //    //Stack
