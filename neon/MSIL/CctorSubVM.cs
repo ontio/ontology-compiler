@@ -168,7 +168,7 @@ namespace Neo.Compiler.MSIL
                             {
                                 foreach (var attr in m.Resolve().CustomAttributes)
                                 {
-                                    if (attr.AttributeType.FullName == "Neo.SmartContract.Framework.NonemitWithConvertAttribute")
+                                    if (attr.AttributeType.FullName == "Ont.SmartContract.Framework.NonemitWithConvertAttribute")
                                     {
                                         var text = (string)calcStack.Pop();
                                         var value = (int)attr.ConstructorArguments[0].Value;

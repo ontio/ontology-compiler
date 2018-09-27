@@ -23,7 +23,7 @@ namespace Neo.Compiler
             var log = new DefLogger();
             log.Log("Neo.Compiler.MSIL console app v" + Assembly.GetEntryAssembly().GetName().Version);
 
-            bool bCompatible = false;
+            bool bCompatible = true;
             string filename = null;
             for (var i = 0; i < args.Length; i++)
             {
